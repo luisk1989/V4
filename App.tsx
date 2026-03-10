@@ -11,6 +11,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isApiKeyMissing = !process.env.GEMINI_API_KEY && !process.env.API_KEY;
+
   const handleFileSelect = (file: File, base64: string, mimeType: string) => {
     setDoc({ file, preview: URL.createObjectURL(file), base64, mimeType });
     setError(null);
@@ -28,8 +30,9 @@ const App: React.FC = () => {
       }));
       setHistory(prev => [...prev, ...newDeclarations]);
       setDoc(null);
-    } catch (err) {
-      setError("Error al extraer datos. Asegúrate de que el documento contiene formularios DIM legibles.");
+    } catch (err: any) {
+      console.error("Extraction error:", err);
+      setError(err.message || "Error al extraer datos. Asegúrate de que el documento contiene formularios DIM legibles.");
     } finally {
       setLoading(false);
     }
@@ -190,7 +193,23 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {error && <div className="max-w-4xl mx-auto p-4 bg-red-50 text-red-600 text-xs font-bold rounded-lg border border-red-100 animate-pulse">{error}</div>}
+        {isApiKeyMissing && (
+          <div className="max-w-4xl mx-auto p-6 bg-amber-50 border border-amber-200 rounded-xl mb-8">
+            <div className="flex gap-3">
+              <svg className="w-6 h-6 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-bold text-amber-800 uppercase tracking-tight">Clave de API no configurada</h3>
+                <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                  Para que la extracción funcione, debes configurar la variable de entorno <code className="bg-amber-100 px-1 rounded">GEMINI_API_KEY</code> en la configuración del proyecto.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && <div className="max-w-4xl mx-auto p-4 bg-red-50 text-red-600 text-xs font-bold rounded-lg border border-red-100 animate-pulse mb-8">{error}</div>}
 
         <section className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
